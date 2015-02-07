@@ -1,16 +1,24 @@
+/*snake game for CMPM20 by Brandon Oleksy
+  snake will speed up as score increases
+  difficulty curve gets very high very quickly
+  creator high score is 30*/
 
+//grid variables
 var columns = 30;
 var rows = 30;
 
+//color choices for boolean comparison
 var emptyFill = 0;
 var snakeFill = 1;
 var foodFill = 2;
 
+//directional choices for boolean comparison
 var left = 0;
 var up = 1;
 var right = 2;
 var down = 3;
 
+//ASCII code for arrow keys
 var keyLeft = 37;
 var keyUp = 38;
 var keyRight = 39;
@@ -98,7 +106,7 @@ function setFood() {
 	//finds all empty cells so not to collide with snake
 	for (var x=0; x < grid.w; x++) {
 		for (var y=0; y < grid.h; y++) {
-			if (grid.get(x, y) === emptyFill) {
+			if (grid.get(x, y) == emptyFill) {
 				empty.push({x:x, y:y});
 			}
 		}
@@ -190,32 +198,32 @@ function update() {
 	if (frames%speed == 0) {
 		
 		//pops head from queue
-		var nx = snake.last.x;
-		var ny = snake.last.y;
+		var snakeX = snake.last.x;
+		var snakeY = snake.last.y;
 
 		//moves snake position
 		switch (snake.direction) {
 			case left:
-				nx--;
+				snakeX--;
 				break;
 			case up:
-				ny--;
+				snakeY--;
 				break;
 			case right:
-				nx++;
+				snakeX++;
 				break;
 			case down:
-				ny++;
+				snakeY++;
 				break;
 		}
 		
 		//checks to see if game over when snake collides with wall
-		if (0 > nx || nx > grid.w-1 || 0 > ny || ny > grid.h-1 || grid.get(nx, ny) === snakeFill) {
+		if (0 > snakeX || snakeX > grid.w-1 || 0 > snakeY || snakeY > grid.h-1 || grid.get(snakeX, snakeY) == snakeFill) {
 			return init();
 		}
 		
 		//updates score when collision between food and snake
-		if (grid.get(nx, ny) === foodFill) {
+		if (grid.get(snakeX, snakeY) == foodFill) {
 			score++;
 			speedCheck++;
 			setFood();
@@ -225,8 +233,8 @@ function update() {
 			var tail = snake.remove();
 			grid.set(emptyFill, tail.x, tail.y);
 		}
-		grid.set(snakeFill, nx, ny);
-		snake.insert(nx, ny);
+		grid.set(snakeFill, snakeX, snakeY);
+		snake.insert(snakeX, snakeY);
 	}
 }
 
