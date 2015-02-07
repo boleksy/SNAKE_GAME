@@ -1,7 +1,15 @@
-/*snake game for CMPM20 by Brandon Oleksy
-  snake will speed up as score increases
-  difficulty curve gets very high very quickly
-  creator high score is 30*/
+/*
+  snake game for CMPM20 by Brandon Oleksy
+  
+  Done without brine because of complications with brine code
+  Converted majority to plain javascript and finished from there
+  
+  DIRECTIONS:
+  Use arrow keys to move
+  Snake will speed up as score increases
+  Difficulty curve gets very high very quickly
+  Creator high score is 30
+*/
 
 //grid variables
 var columns = 30;
