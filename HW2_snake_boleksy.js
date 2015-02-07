@@ -6,15 +6,15 @@ var emptyFill = 0;
 var snakeFill = 1;
 var foodFill = 2;
 
-var LEFT = 0;
-var UP = 1;
-var RIGHT = 2;
-var DOWN = 3;
+var left = 0;
+var up = 1;
+var right = 2;
+var down = 3;
 
-var KEY_LEFT = 37;
-var KEY_UP = 38;
-var KEY_RIGHT = 39;
-var KEY_DOWN = 40;
+var keyLeft = 37;
+var keyUp = 38;
+var keyRight = 39;
+var keyDown = 40;
 
 //objects
 var canvas; 
@@ -22,39 +22,39 @@ var ctx;
 var keystate; 
 var frames; 
 var score; 
-/**
-* Grid datastructor, usefull in games where the game world is
-* confined in absolute sized chunks of data or information.
-*
-* @type {Object}
-*/
+
+//speed control
+var speed;
+var speedCheck;
+
+//datastructure to create snake grid
 grid = {
-	width: null, /* number, the number of columns */
-	height: null, /* number, the number of rows */
-	_grid: null, /* Array<any>, data representation */
+	w: null,  //width of grid
+	h: null, //height of grid
+	g: null, //grid array
 
 	//function to call that creates snake grid
 	init: function(d, c, r) {
-		this.width = c;
-		this.height = r;
-		this._grid = [];
+		this.w = c;
+		this.h = r;
+		this.g = [];
 		
 		for (var x=0; x < c; x++) {
-			this._grid.push([]);
+			this.g.push([]);
 			for (var y=0; y < r; y++) {
-				this._grid[x].push(d);
+				this.g[x].push(d);
 			}
 		}
 	},
 
 	//creates values for cells in grid
 	set: function(val, x, y) {
-		this._grid[x][y] = val;
+		this.g[x][y] = val;
 	},
 
-//gets values of the cell at point in grid
+	//gets values of the cell at point in grid
 	get: function(x, y) {
-		return this._grid[x][y];
+		return this.g[x][y];
 	}
 	
 }
@@ -63,12 +63,12 @@ grid = {
 snake = {
 	direction: null, //direction #
 	last: null, //keeps track of lat element in queue
-	_queue: null, //queue to hold snake
+	q: null, //queue to hold snake
 
 	//snake starting position
 	init: function(d, x, y) {
 		this.direction = d;
-		this._queue = [];
+		this.q = [];
 		this.insert(x, y);
 	},
 
@@ -76,14 +76,14 @@ snake = {
 	insert: function(x, y) {
 	
 		//adds element to the end of snake
-		this._queue.unshift({x:x, y:y});
+		this.q.unshift({x:x, y:y});
 	
-		this.last = this._queue[0];
+		this.last = this.q[0];
 	},
 
 	//removes top of snake for movement
 	remove: function() {
-		return this._queue.pop();
+		return this.q.pop();
 	}
 	
 };
@@ -96,8 +96,8 @@ function setFood() {
 	var empty = [];
 	
 	//finds all empty cells so not to collide with snake
-	for (var x=0; x < grid.width; x++) {
-		for (var y=0; y < grid.height; y++) {
+	for (var x=0; x < grid.w; x++) {
+		for (var y=0; y < grid.h; y++) {
 			if (grid.get(x, y) === emptyFill) {
 				empty.push({x:x, y:y});
 			}
@@ -143,10 +143,12 @@ function main() {
 //resets and initializes game objects in beginning and after death
 function init() {
 	score = 0;
+	speed = 10;
+    speedCheck = 1;
 	grid.init(emptyFill, columns, rows);
-	var sp = {x:Math.floor(columns/2), y:rows-1};
-	snake.init(UP, sp.x, sp.y);
-	grid.set(snakeFill, sp.x, sp.y);
+	var snakePos = {x:Math.floor(columns/2), y:rows-1};
+	snake.init(up, snakePos.x, snakePos.y);
+	grid.set(snakeFill, snakePos.x, snakePos.y);
 	setFood();
 }
 
@@ -158,31 +160,30 @@ function loop() {
 	//calls loop when canvas is ready to be drawn again
 	window.requestAnimationFrame(loop, canvas);
 }
-/**
-* Updates the game logic
-*/
+
+//updates the game state
 function update() {
-	var speed = 10;
 	frames++;
 
 //changes snake direction
 //However, cannot turn-around when opposite key of previous keypressed is pressed
-	if (keystate[KEY_LEFT] && snake.direction != RIGHT) {
-		snake.direction = LEFT;
+	if (keystate[keyLeft] && snake.direction != right) {
+		snake.direction = left;
 	}
-	if (keystate[KEY_UP] && snake.direction != DOWN) {
-		snake.direction = UP;
+	if (keystate[keyUp] && snake.direction != down) {
+		snake.direction = up;
 	}
-	if (keystate[KEY_RIGHT] && snake.direction != LEFT) {
-		snake.direction = RIGHT;
+	if (keystate[keyRight] && snake.direction != left) {
+		snake.direction = right;
 	}
-	if (keystate[KEY_DOWN] && snake.direction != UP) {
-		snake.direction = DOWN;
+	if (keystate[keyDown] && snake.direction != up) {
+		snake.direction = down;
 	}
 	
 	//updates speed of snake for every 3 points
-	if(score%3 == 0 && speed > 2){
+	if(score%3 == 0 && speed > 2 && speedCheck%2 == 0){
 		speed--;
+		speedCheck--;
 	}
 	
 	//updates game and speed of snake
@@ -194,28 +195,29 @@ function update() {
 
 		//moves snake position
 		switch (snake.direction) {
-			case LEFT:
+			case left:
 				nx--;
 				break;
-			case UP:
+			case up:
 				ny--;
 				break;
-			case RIGHT:
+			case right:
 				nx++;
 				break;
-			case DOWN:
+			case down:
 				ny++;
 				break;
 		}
 		
 		//checks to see if game over when snake collides with wall
-		if (0 > nx || nx > grid.width-1 || 0 > ny || ny > grid.height-1 || grid.get(nx, ny) === snakeFill) {
+		if (0 > nx || nx > grid.w-1 || 0 > ny || ny > grid.h-1 || grid.get(nx, ny) === snakeFill) {
 			return init();
 		}
 		
-		//collision for food and snake
+		//updates score when collision between food and snake
 		if (grid.get(nx, ny) === foodFill) {
 			score++;
+			speedCheck++;
 			setFood();
 		} 
 		//if no food collision, tail taken and given new position
@@ -232,12 +234,12 @@ function update() {
 function draw() {
 	
 	//checks width and height of grid sections
-	var tw = canvas.width/grid.width;
-	var th = canvas.height/grid.height;
+	var tw = canvas.width/grid.w;
+	var th = canvas.height/grid.h;
 	
 	//draws in sections of grid
-	for (var x=0; x < grid.width; x++) {
-		for (var y=0; y < grid.height; y++) {
+	for (var x=0; x < grid.w; x++) {
+		for (var y=0; y < grid.h; y++) {
 		//checks grid section for proper fill
 			switch (grid.get(x, y)) {
 				case emptyFill:
@@ -255,7 +257,7 @@ function draw() {
 	}
 
 	//draws score
-	ctx.fillStyle = "#000";
+	ctx.fillStyle = "#000000";
 	ctx.fillText("Score: " + score, 10, canvas.height-10);
 }
 
